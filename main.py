@@ -2,6 +2,8 @@
 import json
 from typing import TextIO
 
+# Constants
+MAX_ARMOR = 1.48
 
 def json_file_filter(filename: str) -> json:
     """
@@ -18,8 +20,7 @@ def json_file_filter(filename: str) -> json:
      
      temp location in the list of locations, hardpoints need to be removed from that list.
      this is done in the for loop"""
-    temp_json = {}
-    temp_json["Description"] = {}
+    temp_json = {"Description": {}}
     temp_json["Description"]["Id"] = json_file["Description"]["Id"]
 
     temp_location_list = []
