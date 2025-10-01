@@ -38,26 +38,26 @@ def json_filter(filename: Path, multi) -> json:
     temp_json['Locations'] = temp_location_list
 
     # Apply multi. Might be better to use loop, some of them might not exist for all mechs.
-    # I'm assuming that all front exist. Will check for back
-    temp_json['Locations'][0]['MaxArmor'] = round(float(temp_json['Locations'][0]['MaxArmor']) * float(multi))
-    temp_json['Locations'][1]['MaxArmor'] = round(float(temp_json['Locations'][1]['MaxArmor']) * float(multi))
-    temp_json['Locations'][2]['MaxArmor'] = round(float(temp_json['Locations'][2]['MaxArmor']) * float(multi))
-    temp_json['Locations'][3]['MaxArmor'] = round(float(temp_json['Locations'][3]['MaxArmor']) * float(multi))
-    temp_json['Locations'][4]['MaxArmor'] = round(float(temp_json['Locations'][4]['MaxArmor']) * float(multi))
-    temp_json['Locations'][5]['MaxArmor'] = round(float(temp_json['Locations'][5]['MaxArmor']) * float(multi))
-    temp_json['Locations'][6]['MaxArmor'] = round(float(temp_json['Locations'][6]['MaxArmor']) * float(multi))
-    temp_json['Locations'][7]['MaxArmor'] = round(float(temp_json['Locations'][7]['MaxArmor']) * float(multi))
+    # I'm assuming that all front exist. Will check for back. Rounding to nearest 10.
+    temp_json['Locations'][0]['MaxArmor'] = int(round(float(temp_json['Locations'][0]['MaxArmor']) * float(multi), -1))
+    temp_json['Locations'][1]['MaxArmor'] = int(round(float(temp_json['Locations'][1]['MaxArmor']) * float(multi), -1))
+    temp_json['Locations'][2]['MaxArmor'] = int(round(float(temp_json['Locations'][2]['MaxArmor']) * float(multi), -1))
+    temp_json['Locations'][3]['MaxArmor'] = int(round(float(temp_json['Locations'][3]['MaxArmor']) * float(multi), -1))
+    temp_json['Locations'][4]['MaxArmor'] = int(round(float(temp_json['Locations'][4]['MaxArmor']) * float(multi), -1))
+    temp_json['Locations'][5]['MaxArmor'] = int(round(float(temp_json['Locations'][5]['MaxArmor']) * float(multi), -1))
+    temp_json['Locations'][6]['MaxArmor'] = int(round(float(temp_json['Locations'][6]['MaxArmor']) * float(multi), -1))
+    temp_json['Locations'][7]['MaxArmor'] = int(round(float(temp_json['Locations'][7]['MaxArmor']) * float(multi), -1))
 
     # Back armor. Only for Center and Torso. Check first if -1.
     if int(temp_json['Locations'][2]['MaxRearArmor']) != -1:
         temp_json['Locations'][2]['MaxRearArmor'] = (
-            round(float(temp_json['Locations'][2]['MaxRearArmor']) * float(multi)))
+            int(round(float(temp_json['Locations'][2]['MaxRearArmor']) * float(multi), -1)))
     if int(temp_json['Locations'][3]['MaxRearArmor']) != -1:
         temp_json['Locations'][3]['MaxRearArmor'] = (
-            round(float(temp_json['Locations'][3]['MaxRearArmor']) * float(multi)))
+            int(round(float(temp_json['Locations'][3]['MaxRearArmor']) * float(multi), -1)))
     if int(temp_json['Locations'][4]['MaxRearArmor']) != -1:
         temp_json['Locations'][4]['MaxRearArmor'] = (
-            round(float(temp_json['Locations'][4]['MaxRearArmor']) * float(multi)))
+            int(round(float(temp_json['Locations'][4]['MaxRearArmor']) * float(multi), -1)))
 
     return temp_json
 
@@ -183,7 +183,8 @@ def json_writer(chassisdefs, out_path):
 
     for chassisdef in chassisdefs.values():
         file = open(chassisdef["Description"]["Id"] + ".json", "w", encoding="utf-8")
-        json.dump(chassisdef, file)
+        # indent and separators will write it to file like BattleTech orig config files
+        json.dump(chassisdef, file, indent=4, separators=(",", ": "))
         file.close()
 
     pass
