@@ -61,6 +61,7 @@ def folder_checker(settings: configparser) -> bool:
                 raise value + " Is not a folder or is empty"
 
     # Delete and create output folder
+    # path_join returns an OS neutral path
     out_path = Path(path_join(current, settings['paths_out']['output']))
     if out_path.exists() and out_path.is_dir():
         rmtree(out_path)
@@ -79,7 +80,7 @@ def folder_checker(settings: configparser) -> bool:
 
     # Check if multi bellow 1. Warn.
     if float(multi) < 1:
-        print("Multi is lower than 1")
+        print("Multiplier is lower than 1")
 
     return True
 
