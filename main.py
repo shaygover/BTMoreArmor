@@ -1,16 +1,17 @@
 #!/bin/python3
 import json
 from typing import TextIO
-from os import getcwd, mkdir
+from os import getcwd, mkdir, scandir, chdir
 import configparser
 from pathlib import Path
 from os.path import join as path_join
 from shutil import rmtree
 
-def json_file_filter(filename: str) -> json:
+def json_filter(filename: Path, multi) -> json:
     """
         read json from filename
         :argument filename: json file to filter
+        :argument multi: Multiplier for armor
         :return filtered json file: max armor and mech id. mech id is the same as file name.
     """
     json_file: json
@@ -25,7 +26,7 @@ def json_file_filter(filename: str) -> json:
     temp_json = {"Description": {}}
     temp_json["Description"]["Id"] = json_file["Description"]["Id"]
 
-    temp_location_list = []
+    temp_location_list = list()
 
     for index in json_file['Locations']:
         del index['Hardpoints']
@@ -36,7 +37,27 @@ def json_file_filter(filename: str) -> json:
 
     temp_json['Locations'] = temp_location_list
 
-    # temp_json['Locations'][0]['MaxArmor'] *= 2 - here for the double my armor. need to move to another func
+    # Apply multi. Might be better to use loop, some of them might not exist for all mechs.
+    # I'm assuming that all front exist. Will check for back
+    temp_json['Locations'][0]['MaxArmor'] = round(float(temp_json['Locations'][0]['MaxArmor']) * float(multi))
+    temp_json['Locations'][1]['MaxArmor'] = round(float(temp_json['Locations'][1]['MaxArmor']) * float(multi))
+    temp_json['Locations'][2]['MaxArmor'] = round(float(temp_json['Locations'][2]['MaxArmor']) * float(multi))
+    temp_json['Locations'][3]['MaxArmor'] = round(float(temp_json['Locations'][3]['MaxArmor']) * float(multi))
+    temp_json['Locations'][4]['MaxArmor'] = round(float(temp_json['Locations'][4]['MaxArmor']) * float(multi))
+    temp_json['Locations'][5]['MaxArmor'] = round(float(temp_json['Locations'][5]['MaxArmor']) * float(multi))
+    temp_json['Locations'][6]['MaxArmor'] = round(float(temp_json['Locations'][6]['MaxArmor']) * float(multi))
+    temp_json['Locations'][7]['MaxArmor'] = round(float(temp_json['Locations'][7]['MaxArmor']) * float(multi))
+
+    # Back armor. Only for Center and Torso. Check first if -1.
+    if int(temp_json['Locations'][2]['MaxRearArmor']) != -1:
+        temp_json['Locations'][2]['MaxRearArmor'] = (
+            round(float(temp_json['Locations'][2]['MaxRearArmor']) * float(multi)))
+    if int(temp_json['Locations'][3]['MaxRearArmor']) != -1:
+        temp_json['Locations'][3]['MaxRearArmor'] = (
+            round(float(temp_json['Locations'][3]['MaxRearArmor']) * float(multi)))
+    if int(temp_json['Locations'][4]['MaxRearArmor']) != -1:
+        temp_json['Locations'][4]['MaxRearArmor'] = (
+            round(float(temp_json['Locations'][4]['MaxRearArmor']) * float(multi)))
 
     return temp_json
 
@@ -96,17 +117,91 @@ def read_settings() -> configparser:
     return settings
 
 
+def read_chassisdefs(settings) -> dict:
+    """
+    Reads all chassisdefs data from files.
+    Updates if existing mechs found.
+    Read order:
+    Base, (DLCs: Flashpoint, HeavyMetal, UrbanWarfare), Mods
+    :param settings: settings as configeparser class
+    :return:
+    """
+    chassisdefs_dict = dict()
+
+    # Get current working folder
+    current_path = getcwd()
+
+    # Create base folder path and get list of files inside.
+    path = Path(path_join(current_path, settings['paths_in']['base']))
+    # Code from chatgpt.
+    files = [entry.path for entry in scandir(path) if entry.is_file()]
+
+    # Add all other folders if they exist
+    if settings['paths_in']['flashpoint'] != "":
+        path = Path(path_join(current_path, settings['paths_in']['flashpoint']))
+        files += ([entry.path for entry in scandir(path) if entry.is_file()])
+
+    if settings['paths_in']['heavymetal'] != "":
+        path = Path(path_join(current_path, settings['paths_in']['heavymetal']))
+        files += ([entry.path for entry in scandir(path) if entry.is_file()])
+
+    if settings['paths_in']['urbanwarfare'] != "":
+        path = Path(path_join(current_path, settings['paths_in']['urbanwarfare']))
+        files += ([entry.path for entry in scandir(path) if entry.is_file()])
+
+    if settings['paths_in']['mods'] != "":
+        path = Path(path_join(current_path, settings['paths_in']['mods']))
+        files += ([entry.path for entry in scandir(path) if entry.is_file()])
+
+
+    # Iterate on files
+    for file in files:
+        temp_json = json_filter(Path(file), settings["settings"]["multi"])
+
+        # if key exist delete it. This may happen if there's a modded version.
+        # Since mods is read after base (and DLCs) we can just delete the existing version
+        if temp_json["Description"]["Id"] in chassisdefs_dict.keys():
+            del chassisdefs_dict[temp_json["Description"]["Id"]]
+
+        chassisdefs_dict[temp_json["Description"]["Id"]] = temp_json
+
+    return chassisdefs_dict
+
+
+def json_writer(chassisdefs, out_path):
+    """
+    Writes all chassisdefs jsons to files
+    :param chassisdefs: dictionary containing all jsons
+    :param out_path: output folder name
+    :return: nothing
+    """
+    # Get current working folder
+    current = getcwd()
+
+    # Change dir to output folder
+    chdir(out_path)
+
+    for chassisdef in chassisdefs.values():
+        file = open(chassisdef["Description"]["Id"] + ".json", "w", encoding="utf-8")
+        json.dump(chassisdef, file)
+        file.close()
+
+    pass
+
 
 def main():
     # Read Settings
     settings = read_settings()
 
     # Check if settings are correct
-    if not folder_checker(settings):
-        raise FileNotFoundError
+    folder_checker(settings)
 
-    # Test with a specific chassisdef
-    json_file_filter("UrbanWarfare/chassisdef_cataphract_CTF-0X.json")
+    # Read all chassisdefs to a dictionary
+    chassisdefs = {}
+    chassisdefs = read_chassisdefs(settings)
+
+    # Write to files
+    json_writer(chassisdefs, settings['paths_out']['output'])
 
 
 if __name__ == "__main__":
