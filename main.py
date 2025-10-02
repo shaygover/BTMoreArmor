@@ -28,11 +28,12 @@ def json_filter(filename: Path, multi) -> json:
 
     temp_location_list = list()
 
+    # Seems that deleting these doesn't help. They don't get merged by ModTek
     for index in json_file['Locations']:
-        del index['Hardpoints']
-        del index['Tonnage']
-        del index['InventorySlots']
-        del index['InternalStructure']
+        #del index['Hardpoints']
+        #del index['Tonnage']
+        #del index['InventorySlots']
+        #del index['InternalStructure']
         temp_location_list.append(index)
 
     temp_json['Locations'] = temp_location_list
