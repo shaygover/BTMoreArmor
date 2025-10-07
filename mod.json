@@ -4,7 +4,6 @@
     
     "DependsOn": ["HeatAndWeight",  
                 "JK_VariantsCampaign", 
-                "cFixes",
                 "JK_VariantsCampaign",
                 "JK_VariantsDLC",
                 "JK_VariantsStarLeague",
