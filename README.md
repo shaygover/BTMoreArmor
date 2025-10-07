@@ -14,3 +14,6 @@ BattleTech more that adds armor to mech
    6. "DependsOn" should look like "DependsOn": ["HeatAndWeight", "mode1", "mode2", "mode3"]
    7. Included mod.json includes the mods I have. Might be ok for you too.
    8. Mod name is inside the mod.json file. 
+
+# Known Issues 
+1. .modtek/Cache/ChassisDef doesn't holds all mods chassisdef but database.json does. Need to write some code.
