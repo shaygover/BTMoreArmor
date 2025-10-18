@@ -7,11 +7,11 @@ from pathlib import Path
 from os.path import join as path_join
 from shutil import rmtree
 
-def json_filter(filename: Path, multi) -> json:
+def json_filter(filename: Path, settings: configparser) -> json:
     """
         read json from filename
         :argument filename: json file to filter
-        :argument multi: Multiplier for armor
+        :argument settings: Settings object
         :return filtered json file: max armor and mech id. mech id is the same as file name.
     """
     json_file: json
@@ -33,7 +33,11 @@ def json_filter(filename: Path, multi) -> json:
         temp_location_list.append(index)
 
     temp_json['Locations'] = temp_location_list
+    temp_json['MaxJumpjets'] = json_file['MaxJumpjets']
 
+    multi = settings["settings"]["multi"]
+
+    # Should be in a different function
     # Apply multi. Might be better to use loop, some of them might not exist for all mechs.
     # I'm assuming that all front exist. Will check for back. Rounding to nearest 10.
     temp_json['Locations'][0]['MaxArmor'] = int(round(float(temp_json['Locations'][0]['MaxArmor']) * float(multi), -1))
@@ -55,6 +59,35 @@ def json_filter(filename: Path, multi) -> json:
     if int(temp_json['Locations'][4]['MaxRearArmor']) != -1:
         temp_json['Locations'][4]['MaxRearArmor'] = (
             int(round(float(temp_json['Locations'][4]['MaxRearArmor']) * float(multi), -1)))
+
+    # Jumpjets addition
+    assault = int(settings["jumpjets"]["assault"])
+    heavy = int(settings["jumpjets"]["heavy"])
+    med = int(settings["jumpjets"]["med"])
+    light = int(settings["jumpjets"]["light"])
+
+    # Add to all if true, otherwise add to only where zero
+    match json_file['weightClass']:
+        case 'LIGHT':
+            if (int(json_file['MaxJumpjets']) == 0) and (bool(settings["jumpjets"]['all'])):
+                temp_json['MaxJumpjets'] = light
+            else:
+                temp_json['MaxJumpjets'] = int(json_file['MaxJumpjets']) + light
+        case 'MEDIUM':
+            if (int(json_file['MaxJumpjets']) == 0) and (bool(settings["jumpjets"]['all'])):
+                temp_json['MaxJumpjets'] = med
+            else:
+                temp_json['MaxJumpjets'] = int(json_file['MaxJumpjets']) + med
+        case 'HEAVY':
+            if (int(json_file['MaxJumpjets']) == 0) and (bool(settings["jumpjets"]['all'])):
+                temp_json['MaxJumpjets'] = heavy
+            else:
+                temp_json['MaxJumpjets'] = int(json_file['MaxJumpjets']) + heavy
+        case 'ASSAULT':
+            if (int(json_file['MaxJumpjets']) == 0) and (bool(settings["jumpjets"]['all'])):
+                temp_json['MaxJumpjets'] = assault
+            else:
+                temp_json['MaxJumpjets'] = int(json_file['MaxJumpjets']) + assault
 
     return temp_json
 
@@ -99,6 +132,19 @@ def folder_checker(settings: configparser) -> bool:
     # Check if multi bellow 1. Warn.
     if float(multi) < 1:
         print("Multiplier is lower than 1")
+
+    # Check if jumpjets values are ok
+    # Assault
+    jj_assault = settings['jumpjets']['assault']
+    if jj_assault == "":
+        raise "Assault addition is missing"
+
+    try:
+        float(jj_assault)
+    except ValueError:
+        raise "Assault addition is not a number"
+
+    # TODO: Add to heavy, med and light
 
     return True
 
@@ -153,7 +199,7 @@ def read_chassisdefs(settings) -> dict:
 
     # Iterate on files
     for file in files:
-        temp_json = json_filter(Path(file), settings["settings"]["multi"])
+        temp_json = json_filter(Path(file), settings)
 
         # if key exist delete it. This may happen if there's a modded version.
         # Since mods is read after base (and DLCs) we can just delete the existing version
