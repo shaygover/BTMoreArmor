@@ -67,27 +67,28 @@ def json_filter(filename: Path, settings: configparser) -> json:
     light = int(settings["jumpjets"]["light"])
 
     # Add to all if true, otherwise add to only where zero
+    # When adding to existing. only add half so it won't be crazy
     match json_file['weightClass']:
         case 'LIGHT':
             if (int(json_file['MaxJumpjets']) == 0) and (bool(settings["jumpjets"]['all'])):
                 temp_json['MaxJumpjets'] = light
             else:
-                temp_json['MaxJumpjets'] = int(json_file['MaxJumpjets']) + light
+                temp_json['MaxJumpjets'] = int(json_file['MaxJumpjets']) + int(round(light/2))
         case 'MEDIUM':
             if (int(json_file['MaxJumpjets']) == 0) and (bool(settings["jumpjets"]['all'])):
                 temp_json['MaxJumpjets'] = med
             else:
-                temp_json['MaxJumpjets'] = int(json_file['MaxJumpjets']) + med
+                temp_json['MaxJumpjets'] = int(json_file['MaxJumpjets']) + int(round(med/2))
         case 'HEAVY':
             if (int(json_file['MaxJumpjets']) == 0) and (bool(settings["jumpjets"]['all'])):
                 temp_json['MaxJumpjets'] = heavy
             else:
-                temp_json['MaxJumpjets'] = int(json_file['MaxJumpjets']) + heavy
+                temp_json['MaxJumpjets'] = int(json_file['MaxJumpjets']) + int(round(heavy/2))
         case 'ASSAULT':
             if (int(json_file['MaxJumpjets']) == 0) and (bool(settings["jumpjets"]['all'])):
                 temp_json['MaxJumpjets'] = assault
             else:
-                temp_json['MaxJumpjets'] = int(json_file['MaxJumpjets']) + assault
+                temp_json['MaxJumpjets'] = int(json_file['MaxJumpjets']) + int(round(assault/2))
 
     return temp_json
 
